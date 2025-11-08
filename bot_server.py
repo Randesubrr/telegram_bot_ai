@@ -8,7 +8,7 @@ BOT_TOKEN = "8325159032:AAEJsQK41xUGSZTzlJvSKw6MBZrAKfypQxs"
 TELEGRAM_URL = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
 
 HF_API_KEY = os.environ.get("HF_API_KEY")
-HF_MODEL = "microsoft/DialoGPT-medium"  # kamu bisa ganti model ini nanti
+HF_MODEL = "facebook/blenderbot-400M-distill"  # kamu bisa ganti model ini nanti
 
 @app.route('/')
 def home():
