@@ -8,7 +8,7 @@ BOT_TOKEN = "8325159032:AAEJsQK41xUGSZTzlJvSKw6MBZrAKfypQxs"
 TELEGRAM_URL = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
 
 HF_API_KEY = os.environ.get("HF_API_KEY")
-HF_MODEL = "tiiuae/falcon-7b-instruct"  # kamu bisa ganti model ini nanti
+HF_MODEL = "gpt2"  # kamu bisa ganti model ini nanti
 
 @app.route('/')
 def home():
