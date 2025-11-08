@@ -32,6 +32,7 @@ def webhook():
             headers=headers,
             json=payload,
         )
+        print("DEBUG HF:", response.status_code, response.text)
 
         if response.ok:
             result = response.json()
