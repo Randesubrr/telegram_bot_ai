@@ -4,50 +4,51 @@ import os
 
 app = Flask(__name__)
 
-BOT_TOKEN = "8325159032:AAEJsQK41xUGSZTzlJvSKw6MBZrAKfypQxs"
-TELEGRAM_URL = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
-
-HF_API_KEY = os.environ.get("HF_API_KEY")
-HF_MODEL = "facebook/blenderbot-400M-distill"  # kamu bisa ganti model ini nanti
+BOT_TOKEN = os.getenv("BOT_TOKEN", "8325159032:AAEJsQK41xUGSZTzlJvSKw6MBZrAKfypQxs")
+HF_API_KEY = os.getenv("HF_API_KEY")
 
 @app.route('/')
 def home():
-    return "Bot AI aktif!"
+    return "Bot aktif dengan AI (Zephyr)!"
 
 @app.route('/webhook', methods=['POST'])
 def webhook():
     data = request.get_json()
     if data and "message" in data:
         chat_id = data["message"]["chat"]["id"]
-        user_text = data["message"].get("text", "")
+        text = data["message"].get("text", "")
 
-        # 🔹 Panggil Hugging Face API
-        headers = {"Authorization": f"Bearer {HF_API_KEY}"}
-        payload = {
-            "inputs": f"Kamu adalah asisten ramah. Jawab pesan berikut dengan sopan:\n\n{user_text}"
+        # kirim ke model HF
+        HF_MODEL = "HuggingFaceH4/zephyr-7b-beta"
+        HF_URL = f"https://router.huggingface.co/hf-inference/{HF_MODEL}"
+
+        headers = {
+            "Authorization": f"Bearer {HF_API_KEY}",
+            "Content-Type": "application/json"
         }
+        payload = {"inputs": text}
 
-        response = requests.post(
-            f"https://router.huggingface.co/hf-inference/models/{HF_MODEL}",
-            headers=headers,
-            json=payload,
-        )
-        print("DEBUG HF:", response.status_code, response.text)
+        try:
+            response = requests.post(HF_URL, headers=headers, json=payload, timeout=20)
+            print("DEBUG HF:", response.status_code, response.text)
+            if response.status_code == 200:
+                data = response.json()
+                if isinstance(data, list) and len(data) > 0 and "generated_text" in data[0]:
+                    reply = data[0]["generated_text"]
+                else:
+                    reply = "AI tidak mengembalikan teks 😅"
+            else:
+                reply = "Maaf, AI sedang sibuk."
+        except Exception as e:
+            print("ERROR HF:", e)
+            reply = "Terjadi kesalahan saat menghubungi AI."
 
-        if response.ok:
-            result = response.json()
-            try:
-                ai_reply = result[0]["generated_text"]
-            except Exception:
-                ai_reply = "Maaf, aku belum bisa memproses jawaban."
-        else:
-            ai_reply = "Maaf, server AI sedang sibuk."
-
-        # 🔹 Kirim balasan ke Telegram
-        requests.post(TELEGRAM_URL, json={"chat_id": chat_id, "text": ai_reply})
+        # kirim balasan ke Telegram
+        send_url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
+        requests.post(send_url, json={"chat_id": chat_id, "text": reply})
 
     return {"ok": True}
 
+
 if __name__ == '__main__':
-    port = int(os.environ.get("PORT", 5000))
-    app.run(host='0.0.0.0', port=port)
+    app.run(host='0.0.0.0', port=8080)
