@@ -48,6 +48,7 @@ def webhook():
         requests.post(send_url, json={"chat_id": chat_id, "text": reply})
 
     return {"ok": True}
+    print("DEBUG TOKEN:", HF_API_KEY[:6] if HF_API_KEY else "NOT FOUND")
 
 
 if __name__ == '__main__':
