@@ -28,7 +28,7 @@ def webhook():
         }
 
         response = requests.post(
-            f"https://api-inference.huggingface.co/models/{HF_MODEL}",
+            f"https://router.huggingface.co/hf-inference/models/{HF_MODEL}",
             headers=headers,
             json=payload,
         )
