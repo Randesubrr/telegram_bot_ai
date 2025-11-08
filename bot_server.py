@@ -20,7 +20,7 @@ def webhook():
 
         # kirim ke model HF
         HF_MODEL = "HuggingFaceH4/zephyr-7b-beta"
-        HF_URL = f"https://router.huggingface.co/hf-inference/{HF_MODEL}"
+        HF_URL = f"https://api-inference.huggingface.co/models/{HF_MODEL}"
 
         headers = {
             "Authorization": f"Bearer {HF_API_KEY}",
