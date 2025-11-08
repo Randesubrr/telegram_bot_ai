@@ -5,24 +5,46 @@ import os
 app = Flask(__name__)
 
 BOT_TOKEN = "8325159032:AAEJsQK41xUGSZTzlJvSKw6MBZrAKfypQxs"
-URL = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
+TELEGRAM_URL = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
 
-# 🔍 Tambahkan ini untuk cek apakah key terbaca
 HF_API_KEY = os.environ.get("HF_API_KEY")
-print("DEBUG: HF_API_KEY detected?" , bool(HF_API_KEY))
+HF_MODEL = "tiiuae/falcon-7b-instruct"  # kamu bisa ganti model ini nanti
 
 @app.route('/')
 def home():
-    return "Bot aktif!"
+    return "Bot AI aktif!"
 
 @app.route('/webhook', methods=['POST'])
 def webhook():
     data = request.get_json()
     if data and "message" in data:
         chat_id = data["message"]["chat"]["id"]
-        text = data["message"].get("text", "")
-        reply = f"Halo! Kamu mengirim: {text}"
-        requests.post(URL, json={"chat_id": chat_id, "text": reply})
+        user_text = data["message"].get("text", "")
+
+        # 🔹 Panggil Hugging Face API
+        headers = {"Authorization": f"Bearer {HF_API_KEY}"}
+        payload = {
+            "inputs": f"Kamu adalah asisten ramah. Jawab pesan berikut dengan sopan:\n\n{user_text}"
+        }
+
+        response = requests.post(
+            f"https://api-inference.huggingface.co/models/{HF_MODEL}",
+            headers=headers,
+            json=payload,
+        )
+
+        if response.ok:
+            result = response.json()
+            try:
+                ai_reply = result[0]["generated_text"]
+            except Exception:
+                ai_reply = "Maaf, aku belum bisa memproses jawaban."
+        else:
+            ai_reply = "Maaf, server AI sedang sibuk."
+
+        # 🔹 Kirim balasan ke Telegram
+        requests.post(TELEGRAM_URL, json={"chat_id": chat_id, "text": ai_reply})
+
     return {"ok": True}
 
 if __name__ == '__main__':
